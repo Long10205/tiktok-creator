@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Creator - Đà Lạt</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Barlow:wght@900&family=Be+Vietnam+Pro:wght@900&family=Bebas+Neue&family=Cinzel:wght@900&family=Cormorant+Garamond:wght@700&family=Dancing+Script:wght@700&family=Inter:wght@900&family=Josefin+Sans:wght@700&family=Kanit:wght@900&family=Lexend:wght@900&family=Libre+Baskerville:wght@700&family=Lora:wght@700&family=Montserrat:wght@900&family=Oswald:wght@700&family=Pacifico&family=Paytone+One&family=Playfair+Display:wght@900&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Be+Vietnam+Pro:wght@900&family=Bebas+Neue&family=Cinzel:wght@900&family=Dancing+Script:wght@700&family=Lexend:wght@900&family=Montserrat:wght@900&family=Pacifico&family=Playfair+Display:ital,wght@0,900;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+   <div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar__header">
+            <div class="hero__tag">TIKTOK CREATOR</div>
+            <h2>Cấu hình</h2>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>📁 2. Thư mục Hình Nền</h3>
+            <label for="input-bg-folder" class="upload-btn-mini">
+                Chọn Folder
+                <input type="file" id="input-bg-folder" webkitdirectory directory multiple style="display:none;">
+            </label>
+            <small id="folder-status" class="status-msg">Chưa chọn thư mục.</small>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>📊 3. Dữ liệu Excel</h3>
+            <label for="input-excel" class="upload-btn-mini">
+                Nạp File Excel
+                <input type="file" id="input-excel" accept=".xlsx, .xls" style="display:none;">
+            </label>
+            <small id="excel-status" class="status-msg">Chưa nạp dữ liệu.</small>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>⚙️ Cấu hình & Render</h3>
+            <div class="input-group">
+                <label>Số bộ ảnh xuất (Set):</label>
+                <input type="number" id="set-count" value="2" min="1">
+            </div>
+        </div>
+
+        <div class="sidebar-section ai-box">
+            <div class="ai-header">
+                ✨ Tích hợp Trí tuệ AI (Gemini + Deepseek)
+            </div>
+            <p class="ai-desc">Nhập API Key của Google Gemini và Deepseek. Nếu Gemini thất bại, hệ thống sẽ tự động chuyển sang Deepseek nếu có Key.</p>
+            
+            <input type="password" id="gemini-key" class="ai-input" placeholder="Gemini API Key...">
+            <input type="password" id="deepseek-key" class="ai-input" placeholder="Deepseek API Key...">
+            
+            <button class="btn-save-key" onclick="saveApiKeys()">Lưu</button>
+        </div>
+        // Bỏ phần AI viết nội dung chi tiết, chỉ giữ lại phần AI tạo tiêu đề trang bìa
+        <div class="config-group">
+    <h3><i class="fas fa-magic"></i> Ý TƯỞNG BỘ ẢNH</h3>
+    <input type="text" id="ai-idea-content" placeholder="Nhập nội dung bạn muốn tạo bộ ảnh..." 
+           style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #2d3446; background: #0f111a; color: white;">
+    
+    <button class="btn-primary" onclick="generateAISet()" style="background: #ee1d52; margin-top: 10px; width: 100%;">
+        TẠO BỘ ẢNH AI
+    </button>
+    </div>
+        // Render và Xuất ảnh
+        <button class="btn-action btn-layout" onclick="generateAndPreview()">🎲 Layout Ngẫu Nhiên</button>
+        <button class="btn-action btn-export" onclick="downloadZipFromPreview()">📥 Xuất Tất Cả Ảnh</button>
+    </aside>
+    
+    <main class="main-content">
+        <div class="preview-banner">
+            <div>
+                <h2>Bản Xem Trước (Premium List)</h2>
+                <p>Kiểm tra nội dung các bộ ảnh trước khi tải về</p>
+            </div>
+        </div>
+
+        <div id="preview-content" class="preview-grid">
+            <div class="empty-state">Vui lòng nạp dữ liệu và nhấn "Layout Ngẫu Nhiên" để bắt đầu.</div>
+        </div>
+    </main>
+</div>
+
+// Các container ẩn để tạo ảnh TikTok
+    <div id="tiktok-master-container" style="position: fixed; left: -9999px; top: 0; pointer-events: none; visibility: hidden;">
+    
+    <div class="tiktok-card" id="tiktok-cover">
+        <div class="cover-overlay"></div>
+        <div class="cover-card-box">
+            <div class="flower-deco flower-top">🌸</div>
+            <div class="card-text-content">
+                <h1 class="cover-main-title">LỊCH TRÌNH</h1>
+                <h1 class="cover-main-title">ĐI ĐÀ LẠT <span class="highlight-text">3N2Đ</span></h1>
+                <h1 class="cover-main-title">THAM KHẢO NGAY NHÉ</h1>
+                <div class="title-divider"></div>
+                <p class="cover-sub-title">Group: Đà Lạt Đi Và Trải Nghiệm</p>
+            </div>
+            <div class="flower-deco flower-bottom">🌺</div>
+        </div>
+    </div>
+
+    <div class="tiktok-card schedule-page" id="tiktok-day1-page">
+        <div class="overlay-dark"></div>
+        <div class="content-wrapper">
+            <div class="day-badge-modern">NGÀY 01</div>
+            <p class="group-tag">Group: Đà Lạt Đi Và Trải Nghiệm</p>
+            <div class="section-container">
+                <h2 class="section-title">ĐỊA ĐIỂM ĂN UỐNG</h2>
+                <ul class="list-items" id="food-list-day1"></ul>
+            </div>
+            <div class="section-container">
+                <h2 class="section-title">ĐỊA ĐIỂM ĐI CHƠI</h2>
+                <ul class="list-items" id="play-list-day1"></ul>
+            </div>
+            
+        </div>
+    </div>
+<div class="tiktok-card schedule-page" id="tiktok-day2-page">
+        <div class="overlay-dark"></div>
+        <div class="content-wrapper">
+            <div class="day-badge-modern">NGÀY 02</div>
+            <p class="group-tag">Group: Đà Lạt Đi Và Trải Nghiệm</p>
+            <div class="section-container">
+                <h2 class="section-title">ĐỊA ĐIỂM ĂN UỐNG</h2>
+                <ul class="list-items" id="food-list-day2"></ul>
+            </div>
+            <div class="section-container">
+                <h2 class="section-title">ĐỊA ĐIỂM ĐI CHƠI</h2>
+                <ul class="list-items" id="play-list-day2"></ul>
+            </div>
+            
+        </div>
+    </div>
+    <div class="tiktok-card schedule-page" id="tiktok-day3-page">
+        <div class="overlay-dark"></div>
+        <div class="content-wrapper">
+            <div class="day-badge-modern">NGÀY 03</div>
+            <p class="group-tag">Group: Đà Lạt Đi Và Trải Nghiệm</p>
+            <div class="section-container">
+                <h2 class="section-title">ĐỊA ĐIỂM ĂN UỐNG</h2>
+                <ul class="list-items" id="food-list-day3"></ul>
+            </div>
+            <div class="section-container">
+                <h2 class="section-title">ĐỊA ĐIỂM ĐI CHƠI</h2>
+                <ul class="list-items" id="play-list-day3"></ul>
+            </div>
+            
+        </div>
+    </div>
+    <div class="tiktok-card schedule-page" id="tiktok-service-page">
+    <div class="overlay-dark"></div>
+    <div class="content-wrapper">
+        <div class="day-badge-modern">DỊCH VỤ</div>
+        <p class="group-tag">Group: Đà Lạt Đi Và Trải Nghiệm</p>
+        <div class="section-container">
+            <h2 class="section-title">MỘT SỐ DỊCH VỤ</h2>
+            <ul class="list-items" id="service-list"></ul>
+        </div>
+        <div class="transport-box">
+            <h2 class="transport-title">THUÊ XE MÁY PHONG HOA HUỆ</h2>
+            <p class="transport-phone">👉 0942749068 - 0916233444</p>
+        </div>
+    </div>
+</div>
+
+<div class="tiktok-card schedule-page" id="tiktok-activity-page">
+    <div class="overlay-dark"></div>
+    <div class="content-wrapper">
+        <div class="day-badge-modern">TRẢI NGHIỆM</div>
+        <p class="group-tag">Group: Đà Lạt Đi Và Trải Nghiệm</p>
+        <div class="section-container">
+            <h2 class="section-title">MỘT SỐ HOẠT ĐỘNG</h2>
+            <ul class="list-items" id="activity-list"></ul>
+        </div>
+        
+    </div>
+</div>
+    </div>
+    <script src="/static/menu.js"></script>
+</body>
+</html>
