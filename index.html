@@ -27,9 +27,15 @@
             </label>
             <small id="folder-status" class="status-msg">Chưa chọn thư mục.</small>
         </div>
-
         <div class="sidebar-section">
-            <h3>📊 3. Dữ liệu Excel</h3>
+            <h3>🍲 3. Thư mục Ảnh Đồ Ăn</h3>
+            <label for="input-food-folder" class="upload-btn-mini" style="background: #28a745;"> Chọn Folder Đồ Ăn
+                <input type="file" id="input-food-folder" webkitdirectory directory multiple style="display:none;">
+            </label>
+            <small id="food-status" class="status-msg">Chưa chọn thư mục đồ ăn.</small>
+        </div>
+        <div class="sidebar-section">
+            <h3>📊 4. Dữ liệu Excel</h3>
             <label for="input-excel" class="upload-btn-mini">
                 Nạp File Excel
                 <input type="file" id="input-excel" accept=".xlsx, .xls" style="display:none;">
@@ -84,7 +90,15 @@
         </div>
     </main>
 </div>
+// Các container chính để hiển thị danh sách và hình ảnh, cũng sẽ được sử dụng để tạo ảnh TikTok
+<ul class="list-items" id="food-list-day1"></ul>
+<div id="food-images-day1" class="mini-images-container"></div>
 
+<ul class="list-items" id="food-list-day2"></ul>
+<div id="food-images-day2" class="mini-images-container"></div>
+
+<ul class="list-items" id="food-list-day3"></ul>
+<div id="food-images-day3" class="mini-images-container"></div>
 // Các container ẩn để tạo ảnh TikTok
     <div id="tiktok-master-container" style="position: fixed; left: -9999px; top: 0; pointer-events: none; visibility: hidden;">
     
@@ -111,10 +125,12 @@
             <div class="section-container">
                 <h2 class="section-title">ĐỊA ĐIỂM ĂN UỐNG</h2>
                 <ul class="list-items" id="food-list-day1"></ul>
+                <div id="food-images-day1"></div>
             </div>
             <div class="section-container">
                 <h2 class="section-title">ĐỊA ĐIỂM ĐI CHƠI</h2>
                 <ul class="list-items" id="play-list-day1"></ul>
+                <div id="play-images-day1" class="mini-images-container"></div>
             </div>
             
         </div>
@@ -127,10 +143,12 @@
             <div class="section-container">
                 <h2 class="section-title">ĐỊA ĐIỂM ĂN UỐNG</h2>
                 <ul class="list-items" id="food-list-day2"></ul>
+                <div id="food-images-day2"></div>
             </div>
             <div class="section-container">
                 <h2 class="section-title">ĐỊA ĐIỂM ĐI CHƠI</h2>
                 <ul class="list-items" id="play-list-day2"></ul>
+                <div id="play-images-day2" class="mini-images-container"></div>
             </div>
             
         </div>
@@ -143,10 +161,12 @@
             <div class="section-container">
                 <h2 class="section-title">ĐỊA ĐIỂM ĂN UỐNG</h2>
                 <ul class="list-items" id="food-list-day3"></ul>
+                <div id="food-images-day3"></div>
             </div>
             <div class="section-container">
                 <h2 class="section-title">ĐỊA ĐIỂM ĐI CHƠI</h2>
                 <ul class="list-items" id="play-list-day3"></ul>
+                <div id="play-images-day3" class="mini-images-container"></div>
             </div>
             
         </div>
