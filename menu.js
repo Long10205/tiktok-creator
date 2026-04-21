@@ -4,7 +4,8 @@
 let excelData = { breakfasts: [], lunches: [], dinners: [], places: [], services: [], activities: [] };
 let userSelectedImages = []; 
 let currentPreviewBlobs = []; 
-
+// Mảng chủ đề font chữ cho các bộ ảnh
+let foodImages = []; // Biến mới để giữ ảnh đồ ăn
 const menuThemes = [
     { name: 'Trending TikTok', font: "'Anton', sans-serif" },
     { name: 'Thanh lịch', font: "'Be Vietnam Pro', sans-serif" },
@@ -102,7 +103,24 @@ document.getElementById('input-bg-folder').addEventListener('change', function(e
     userSelectedImages = files.map(file => URL.createObjectURL(file));
     document.getElementById('folder-status').innerText = `✅ Đã nạp ${userSelectedImages.length} ảnh nền`;
 });
+// Xử lý nạp thư mục ảnh đồ ăn
+document.getElementById('input-food-folder').addEventListener('change', function(e) {
+    const files = e.target.files;
+    const status = document.getElementById('food-status');
+    foodImages = []; // Xóa cũ nạp mới
 
+    for (let file of files) {
+        if (file.type.startsWith('image/')) {
+            const url = URL.createObjectURL(file);
+            foodImages.push({ url: url, name: file.name });
+        }
+    }
+
+    if (foodImages.length > 0) {
+        status.innerText = `Đã nạp ${foodImages.length} ảnh đồ ăn.`;
+        status.style.color = "#00ff00";
+    }
+});
 // ==========================================
 // 3. QUẢN LÝ BỘ ẢNH (SETS) & RENDER
 // ==========================================
@@ -149,44 +167,79 @@ async function renderSetImages(index) {
     
     const pageIds = ['tiktok-cover', 'tiktok-day1-page', 'tiktok-day2-page', 'tiktok-day3-page', 'tiktok-service-page', 'tiktok-activity-page'];
     
-    // Trộn ngẫu nhiên danh sách ảnh nền cho bộ này để không trùng nhau giữa các trang
-    let setBackgrounds = [...userSelectedImages].sort(() => Math.random() - 0.5);
+    // Tạo bản sao danh sách ảnh nền và trộn ngẫu nhiên để lấy dần (tránh trùng lặp)
+    let availableBgs = [...userSelectedImages].sort(() => Math.random() - 0.5);
 
-    imgContainer.innerHTML = '<p style="color: #ffaa00;">✨ Đang vẽ 6 ảnh...</p>'; 
+    imgContainer.innerHTML = '<p style="color: #ffaa00;">✨ Đang vẽ bộ ảnh độc bản (không trùng lặp)...</p>'; 
     let usedItems = new Set(); 
+
+    // Hàm lấy 3 ảnh đồ ăn ngẫu nhiên
+    function getRandomFoodThumbs(count) {
+        const source = (typeof foodImages !== 'undefined' && foodImages.length > 0) ? foodImages : availableBgs;
+        if (source.length === 0) return [];
+        return [...source].sort(() => Math.random() - 0.5).slice(0, count);
+    }
 
     for (let j = 0; j < pageIds.length; j++) { 
         const el = document.getElementById(pageIds[j]);
         if (!el) continue;
 
-        // Đổ dữ liệu Dịch vụ (Trang 5)
+        // 1. GÁN ẢNH NỀN (Lấy 1 tấm và loại bỏ khỏi danh sách availableBgs)
+        if (availableBgs.length > 0) {
+            let bgImg = availableBgs.shift(); // Lấy tấm đầu tiên và xóa khỏi mảng
+            let bgUrl = typeof bgImg === 'object' ? bgImg.url : bgImg;
+            el.style.backgroundImage = `url('${bgUrl}')`;
+        }
+
+        // 2. ĐỔ DỮ LIỆU CHỮ (Dịch vụ, Hoạt động, Lịch trình)
         if (pageIds[j] === 'tiktok-service-page') {
             const listEl = el.querySelector('#service-list');
             const items = getUniquePriority(excelData.services, 5, new Set()); 
             listEl.innerHTML = items.map(text => `<li style="list-style:none;">👉 ${text}</li>`).join('');
         } 
-        // Đổ dữ liệu Hoạt động (Trang 6)
         else if (pageIds[j] === 'tiktok-activity-page') {
             const listEl = el.querySelector('#activity-list');
             const items = getUniquePriority(excelData.activities, 5, new Set());
             listEl.innerHTML = items.map(text => `<li style="list-style:none;">👉 ${text}</li>`).join('');
         }
-        // Các trang lịch trình (1-3)
         else if (j >= 1 && j <= 3) {
             const foodList = el.querySelector(`#food-list-day${j}`);
             const playList = el.querySelector(`#play-list-day${j}`);
+            const foodImagesBox = el.querySelector(`#food-images-day${j}`);
+            const playImagesBox = el.querySelector(`#play-images-day${j}`); // Thẻ chứa 2 ảnh đi chơi
+
+            // Đổ text món ăn & địa điểm
             const morning = getUniquePriority(excelData.breakfasts, 1, usedItems)[0];
             const lunch = getUniquePriority(excelData.lunches, 1, usedItems)[0];
             const dinner = getUniquePriority(excelData.dinners, 1, usedItems)[0];
             const sites = getUniquePriority(excelData.places, 6, usedItems);
+
             if (foodList) foodList.innerHTML = `<li>Sáng: ${morning}</li><li>Trưa: ${lunch}</li><li>Tối: ${dinner}</li>`;
             if (playList) playList.innerHTML = sites.map(s => `<li>👉 ${s}</li>`).join('');
+            
+            // CHÈN 3 ẢNH ĐỒ ĂN
+            if (foodImagesBox) {
+                const thumbs = getRandomFoodThumbs(3);
+                foodImagesBox.innerHTML = thumbs.map(img => {
+                    const url = typeof img === 'object' ? img.url : img;
+                    return `<img src="${url}" class="mini-thumb">`;
+                }).join('');
+            }
+
+            // CHÈN 2 ẢNH ĐI CHƠI (Lấy từ ảnh nền còn lại và loại bỏ để không trùng nền trang sau)
+            if (playImagesBox) {
+                let playPhotos = [];
+                for(let i=0; i<4; i++) {
+                    if(availableBgs.length > 0) playPhotos.push(availableBgs.shift());
+                }
+                playImagesBox.innerHTML = playPhotos.map(img => {
+                    const url = typeof img === 'object' ? img.url : img;
+                    return `<img src="${url}" class="mini-thumb">`;
+                }).join('');
+            }
         }
 
-        // Gán ảnh nền khác nhau cho từng trang
-        if (setBackgrounds.length > 0) {
-            el.style.backgroundImage = `url('${setBackgrounds[j % setBackgrounds.length]}')`;
-        }
+        // 3. ĐỊNH DẠNG & VẼ CANVAS
         el.style.fontFamily = setTheme.font;
         el.querySelectorAll('.section-title').forEach(t => t.style.color = setHeaderColor);
 
@@ -203,7 +256,6 @@ async function renderSetImages(index) {
         currentPreviewBlobs.push({ setId: index, name: `Bo_${index}/Trang_${j + 1}.jpg`, blob: blob });
     }
 }
-
 function getUniquePriority(pool, count, usedSet) {
     if (!pool || pool.length === 0) return Array(count).fill("Đang cập nhật...");
     let available = pool.filter(item => !usedSet.has(item.name));
